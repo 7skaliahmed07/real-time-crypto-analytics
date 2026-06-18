@@ -2,11 +2,10 @@ from websocket import WebSocketApp
 import json
 import ssl
 
-
-
-
+# WebSocket URL for Binance BTC/USDT trades
 SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@trade"
 
+# Callback functions for WebSocket events
 def on_message(ws, message):
     data = json.loads(message)
 
@@ -16,6 +15,7 @@ def on_message(ws, message):
         f"Trade ID: {data['t']}"
     )
     
+# Other callback functions for WebSocket events    
 def on_error(ws, error):
     print(f"Error: {error}")
     
