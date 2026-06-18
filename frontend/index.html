@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Crypto Trading Dashboard</title>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         body {
             font-family: Arial;
@@ -44,6 +46,12 @@
         th {
             color: #38bdf8;
         }
+
+        canvas {
+            background: #1e293b;
+            border-radius: 10px;
+            padding: 10px;
+        }
     </style>
 </head>
 
@@ -68,8 +76,18 @@
     </div>
 </div>
 
-<h2>📈 Live Trades</h2>
 
+
+<h2>📈 Live Price Chart</h2>
+<canvas id="priceChart" height="100"></canvas>
+
+<div class="card">
+    <h3>Total PnL</h3>
+    <div id="totalPnl">-</div>
+</div>
+
+
+<h2>📋 Live Trades</h2>
 <table>
     <thead>
         <tr>
@@ -82,7 +100,45 @@
     <tbody id="tradeTable"></tbody>
 </table>
 
+
+
 <script>
+let priceChart;
+
+function initChart() {
+    const ctx = document.getElementById("priceChart");
+
+    priceChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: [{
+                label: "BTC Price",
+                data: [],
+                borderColor: "#38bdf8",
+                borderWidth: 2,
+                fill: false,
+                tension: 0.2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { display: false }
+            }
+        }
+    });
+}
+
+async function fetchPnL() {
+    const res = await fetch("http://localhost:8000/pnl");
+    const data = await res.json();
+
+    <!-- console.log("PNL DATA:", data); -->
+
+    document.getElementById("totalPnl").innerText = data.pnl.toFixed(2);
+}
+
 async function fetchStats() {
     const res = await fetch("http://localhost:8000/stats");
     const data = await res.json();
@@ -95,7 +151,24 @@ async function fetchLatestPrice() {
     const res = await fetch("http://localhost:8000/latest-price");
     const data = await res.json();
 
-    document.getElementById("latestPrice").innerText = data.latest_price;
+    const price = data.latest_price;
+    document.getElementById("latestPrice").innerText = price;
+
+    updateChart(price);
+}
+
+function updateChart(price) {
+    const now = new Date().toLocaleTimeString();
+
+    priceChart.data.labels.push(now);
+    priceChart.data.datasets[0].data.push(price);
+
+    if (priceChart.data.labels.length > 30) {
+        priceChart.data.labels.shift();
+        priceChart.data.datasets[0].data.shift();
+    }
+
+    priceChart.update();
 }
 
 async function fetchTrades() {
@@ -123,10 +196,12 @@ function refreshAll() {
     fetchStats();
     fetchLatestPrice();
     fetchTrades();
+    fetchPnL();
 }
 
+initChart();
 refreshAll();
-setInterval(refreshAll, 2000);
+setInterval(refreshAll, 1000);
 </script>
 
 </body>

@@ -141,3 +141,74 @@ def latest_price():
         "latest_price": float(row[0]) if row else 0
     }
     
+#-----------------------------
+# 4. PNL ENDPOINT
+#-----------------------------
+   
+@app.get("/pnl")
+def pnl():
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            price,
+            quantity
+        FROM trades
+        ORDER BY event_time DESC;
+    """)
+
+    rows = cur.fetchall()
+
+    if not rows:
+        return []
+
+    # simple mock PnL logic (since no instrument mapping exists)
+    avg_price = sum(r[0] for r in rows) / len(rows)
+
+    total_qty = sum(r[1] for r in rows)
+
+    last_price = rows[0][0]
+
+    pnl_value = (last_price - avg_price) * total_qty
+
+    return {
+        "total_trades": len(rows),
+        "avg_price": avg_price,
+        "last_price": last_price,
+        "total_quantity": total_qty,
+        "pnl": pnl_value
+    }
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            t.instrument,
+            SUM(t.quantity) as qty,
+            AVG(t.price) as avg_price,
+            MAX(t.price) as last_price
+        FROM trades t
+        GROUP BY t.instrument;
+    """)
+
+    rows = cur.fetchall()
+
+    result = []
+
+    for r in rows:
+        qty = float(r[1])
+        avg = float(r[2])
+        last = float(r[3])
+
+        pnl = (last - avg) * qty
+
+        result.append({
+            "instrument": r[0],
+            "quantity": qty,
+            "avg_price": avg,
+            "last_price": last,
+            "pnl": pnl
+        })
+
+    return result
