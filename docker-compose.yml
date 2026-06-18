@@ -2,17 +2,57 @@ services:
 
   postgres:
     image: postgres:16
-
     environment:
       POSTGRES_USER: crypto
       POSTGRES_PASSWORD: crypto
       POSTGRES_DB: crypto
-
     ports:
       - "5432:5432"
-
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crypto"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  amd:
+    build: ./amd
+    ports:
+      - "1337:1337"
+
+  ingestion:
+    build: ./ingestion
+    depends_on:
+      - postgres
+      - amd
+    environment:
+      DB_HOST: postgres
+      DB_NAME: crypto
+      DB_USER: crypto
+      DB_PASSWORD: crypto
+      AMD_HOST: amd
+      AMD_PORT: 1337
+
+  backend:
+    build: ./backend
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: postgres
+      DB_NAME: crypto
+      DB_USER: crypto
+      DB_PASSWORD: crypto
+
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
 
 volumes:
-  postgres_data:
+  pgdata:

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 import psycopg2
 import os
+import time
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
@@ -19,13 +20,21 @@ app.add_middleware(
 
 
 def get_conn():
-    return psycopg2.connect(
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT"),
-        database=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD")
-    )
+    for i in range(20):
+        try:
+            conn = psycopg2.connect(
+                host=os.getenv("DB_HOST", "postgres"),
+                port=int(os.getenv("DB_PORT", 5432)),
+                database=os.getenv("DB_NAME", "crypto"),
+                user=os.getenv("DB_USER", "crypto"),
+                password=os.getenv("DB_PASSWORD", "crypto")
+            )
+            return conn
+        except Exception as e:
+            print(f"DB not ready (attempt {i+1}/20):", e)
+            time.sleep(2)
+
+    raise Exception("Database connection failed after retries")
 
 
 @app.get("/")
