@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crypto Trading Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 20px;
+            background: #0f172a;
+            color: white;
+        }
+
+        h1 {
+            color: #38bdf8;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #334155;
+            text-align: left;
+        }
+
+        th {
+            color: #38bdf8;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>📊 Crypto Trading Dashboard</h1>
+
+<div class="grid">
+    <div class="card">
+        <h3>Total Trades</h3>
+        <div id="totalTrades">-</div>
+    </div>
+
+    <div class="card">
+        <h3>Avg Price</h3>
+        <div id="avgPrice">-</div>
+    </div>
+
+    <div class="card">
+        <h3>Latest Price</h3>
+        <div id="latestPrice">-</div>
+    </div>
+</div>
+
+<h2>📈 Live Trades</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Trade ID</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Time</th>
+        </tr>
+    </thead>
+    <tbody id="tradeTable"></tbody>
+</table>
+
+<script>
+async function fetchStats() {
+    const res = await fetch("http://localhost:8000/stats");
+    const data = await res.json();
+
+    document.getElementById("totalTrades").innerText = data.total_trades;
+    document.getElementById("avgPrice").innerText = data.avg_price.toFixed(2);
+}
+
+async function fetchLatestPrice() {
+    const res = await fetch("http://localhost:8000/latest-price");
+    const data = await res.json();
+
+    document.getElementById("latestPrice").innerText = data.latest_price;
+}
+
+async function fetchTrades() {
+    const res = await fetch("http://localhost:8000/trades");
+    const trades = await res.json();
+
+    const table = document.getElementById("tradeTable");
+    table.innerHTML = "";
+
+    trades.slice(0, 20).forEach(t => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${t.trade_id}</td>
+            <td>${t.price}</td>
+            <td>${t.quantity}</td>
+            <td>${t.event_time}</td>
+        `;
+
+        table.appendChild(row);
+    });
+}
+
+function refreshAll() {
+    fetchStats();
+    fetchLatestPrice();
+    fetchTrades();
+}
+
+refreshAll();
+setInterval(refreshAll, 2000);
+</script>
+
+</body>
+</html>
