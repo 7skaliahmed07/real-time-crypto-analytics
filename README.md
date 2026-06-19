@@ -1,5 +1,12 @@
-# Real-Time Crypto Analytics
-![Architectural Diagram] (real-time-analytics.png)
+<h1 align="center">Real-Time Crypto Analytics</h1>
+
+<p align="center">
+  <img src="./real-time-analytics.png" alt="Architecture Diagram" width="900">
+</p>
+
+<p align="center">
+  Real-time Binance trade ingestion, PostgreSQL storage, FastAPI backend, and live analytics dashboard.
+</p>
 
 A real-time cryptocurrency analytics platform that streams live BTC/USDT trade data from Binance, stores it in PostgreSQL, and exposes analytics through a FastAPI backend and web dashboard.
 
