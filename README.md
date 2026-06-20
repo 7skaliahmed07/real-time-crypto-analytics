@@ -78,17 +78,6 @@ Example query:
 SELECT COUNT(*) FROM trades;
 ```
 
-## Current Status
-
-✅ Dockerized architecture
-
-✅ Live Binance trade ingestion
-
-✅ PostgreSQL persistence
-
-✅ FastAPI backend
-
-✅ Frontend dashboard
 
 ## Future Enhancements
 
